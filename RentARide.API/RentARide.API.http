@@ -1,0 +1,6 @@
+@RentARide.API_HostAddress = http://localhost:5062
+
+GET {{RentARide.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
