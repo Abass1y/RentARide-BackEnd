@@ -25,5 +25,13 @@ namespace RentARide.Infrastructure.Repositories
                 .Where(r => r.VehicleId == vehicleId && r.Status == "Active")
                 .ToListAsync();
         }
+        public async Task<IEnumerable<Rental>> GetRentalsByUserIdAsync(Guid userId)
+        {
+            return await context.Rentals
+                .Include(r => r.Vehicle) 
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.StartDate) 
+                .ToListAsync();
+        }
     }
 }

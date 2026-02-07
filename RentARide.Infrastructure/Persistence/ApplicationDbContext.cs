@@ -21,10 +21,11 @@ namespace RentARide.Infrastructure.Persistence
         public DbSet<Amenity> Amenities { get; set; }
         public DbSet<RentalAmenity> RentalAmenities { get; set; }
         public DbSet<VehicleMaintenance> VehicleMaintenances { get; set; }
-
+        public DbSet<AuditLog> AuditLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-          
+            modelBuilder.Entity<Vehicle>().HasQueryFilter(v => !v.IsDeleted);
+            modelBuilder.Entity<Rental>().HasQueryFilter(r => !r.IsDeleted);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         }
     }

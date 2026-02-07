@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace RentARide.Domain
 {
-    internal interface ISoftDeletable
+    public interface ISoftDeletable
     {
+        bool IsDeleted { get; set; }
     }
 }

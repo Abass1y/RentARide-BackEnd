@@ -16,19 +16,15 @@ namespace RentARide.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateRentalDto dto)
         {
-            // 1. استخراج ID المستخدم من التوكن (لا تثق بالـ Client!)
             var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
-            // 2. التحقق من توفر السيارة
             if (!await _rentalService.IsVehicleAvailable(dto.VehicleId, dto.StartDate, dto.EndDate))
             {
                 return BadRequest(ApiResponse<string>.FailureResponse("Vehicle is already booked for these dates."));
             }
 
-            // 3. حساب السعر
             var totalPrice = await _rentalService.CalculateTotalPrice(dto.VehicleId, dto.StartDate, dto.EndDate);
 
-            // 4. إنشاء الحجز
             var rental = new Rental
             {
                 UserId = userId,
@@ -42,6 +38,30 @@ namespace RentARide.API.Controllers
             await _rentalRepository.AddAsync(rental);
 
             return Ok(ApiResponse<object>.SuccessResponse(new { TotalPrice = totalPrice }, "Rental created successfully!"));
+        }
+        [HttpGet("my-rentals")]
+        public async Task<IActionResult> GetMyRentals()
+        {
+            
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+                return Unauthorized(ApiResponse<object>.FailureResponse(new List<string> { "User ID not found in token" }));
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var rentals = await _rentalRepository.GetRentalsByUserIdAsync(userId);
+
+            var result = rentals.Select(r => new {
+                r.Id,
+                r.StartDate,
+                r.EndDate,
+                r.TotalPrice,
+                VehicleModel = r.Vehicle.Model,
+                r.Vehicle.LicensePlate
+            });
+
+            return Ok(ApiResponse<object>.SuccessResponse(result, "Your rentals retrieved successfully"));
         }
     }
 }

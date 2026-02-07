@@ -10,10 +10,11 @@ using RentARide.Application.Interfaces;
 using RentARide.Application.Services;
 using RentARide.Application.Validators;
 using RentARide.Domain;
-using RentARide.Domain.interfaces;
 using RentARide.Domain.Entities; 
-using RentARide.Infrastructure.Persistence; 
+using RentARide.Domain.interfaces;
 using RentARide.Infrastructure.Configurations;
+using RentARide.Infrastructure.Interceptors;
+using RentARide.Infrastructure.Persistence; 
 using RentARide.Infrastructure.Repositories;
 using System.Text;
 
@@ -74,11 +75,19 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// 4. Database Context (PostgreSQL)
+builder.Services.AddSingleton<AuditLogInterceptor>();
+
+
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+{
+    var interceptor = sp.GetRequiredService<AuditLogInterceptor>();
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(interceptor); 
+});
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 5. Authentication Setup (🚨 الجزء الذي كان مفقوداً)
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -97,8 +106,8 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 });
+builder.Services.AddHttpClient();
 
-// 6. Dependency Injection (DI)
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
@@ -106,7 +115,7 @@ builder.Services.AddScoped<RentalService>();
 
 var app = builder.Build();
 
-// 7. Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -10,14 +10,9 @@ using System.Threading.Tasks;
 
 namespace RentARide.Infrastructure.Repositories
 {
-    public class VehicleRepository : IVehicleRepository
+    public class VehicleRepository(ApplicationDbContext _context) : IVehicleRepository
     {
-        private readonly ApplicationDbContext _context;
 
-        public VehicleRepository(ApplicationDbContext context)
-        {
-            _context = context;
-        }
         public async Task<IEnumerable<Vehicle>> GetAllAsync()
         {
             return await _context.Vehicles
@@ -50,7 +45,7 @@ namespace RentARide.Infrastructure.Repositories
 
             if (vehicle != null)
             {
-               _context.Vehicles.Remove(vehicle);
+                vehicle.IsDeleted = true;
               await _context.SaveChangesAsync();
             }
         }
