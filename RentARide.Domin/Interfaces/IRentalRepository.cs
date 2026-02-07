@@ -12,5 +12,6 @@ namespace RentARide.Domain.interfaces
         Task AddAsync(Rental rental);
         Task<IEnumerable<Rental>> GetActiveRentalsByVehicleAsync(Guid vehicleId);
         Task<IEnumerable<Rental>> GetRentalsByUserIdAsync(Guid userId);
+        Task<IEnumerable<Rental>> GetActiveOverdueRentalsAsync();
     }
 }

@@ -47,6 +47,17 @@ namespace RentARide.Application.Services
 
             return !existingRentals.Any(r => (start < r.EndDate && end > r.StartDate));
         }
+        public async Task CheckOverdueRentals()
+        {
+           
+            var overdueRentals = await _rentalRepository.GetActiveOverdueRentalsAsync();
+
+            foreach (var rental in overdueRentals)
+            {
+                
+                Console.WriteLine($"[WARNING]: {DateTime.UtcNow} - Rental {rental.Id} is overdue. User {rental.UserId} has not returned the car.");
+            }
+        }
     }
 
     

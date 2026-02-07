@@ -17,13 +17,20 @@ using RentARide.Infrastructure.Interceptors;
 using RentARide.Infrastructure.Persistence; 
 using RentARide.Infrastructure.Repositories;
 using System.Text;
-
+using Hangfire;
+using Hangfire.PostgreSql;
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add services to the container.
 builder.Services.AddControllers();
 
-// إعدادات الرد الموحد عند فشل الـ Validation
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(options =>
+    {
+        options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }));
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
@@ -107,7 +114,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddHttpClient();
-
+builder.Services.AddHangfireServer();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
@@ -126,8 +133,20 @@ app.UseHttpsRedirection();
 
 
 app.UseAuthentication(); 
-app.UseAuthorization();  
-
+app.UseAuthorization();
+app.UseHangfireDashboard();
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    var rentalService = scope.ServiceProvider.GetRequiredService<RentalService>();
+
+    
+    recurringJobManager.AddOrUpdate(
+        "check-overdue-rentals",
+        () => rentalService.CheckOverdueRentals(),
+        Cron.Hourly
+    );
+}
 app.Run();

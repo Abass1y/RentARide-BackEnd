@@ -33,5 +33,11 @@ namespace RentARide.Infrastructure.Repositories
                 .OrderByDescending(r => r.StartDate) 
                 .ToListAsync();
         }
+        public async Task<IEnumerable<Rental>> GetActiveOverdueRentalsAsync()
+        {
+            return await context.Rentals
+                .Where(r => r.Status == "Active" && r.EndDate < DateTime.UtcNow)
+                .ToListAsync();
+        }
     }
 }
