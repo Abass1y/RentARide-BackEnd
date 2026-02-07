@@ -11,8 +11,8 @@ using RentARide.Application.Services;
 using RentARide.Application.Validators;
 using RentARide.Domain;
 using RentARide.Domain.interfaces;
-using RentARide.Domain.Entities; // تأكد من مطابقة الـ Namespace هنا
-using RentARide.Infrastructure.Persistence; // تأكد من مطابقة اسم مجلد البيانات
+using RentARide.Domain.Entities; 
+using RentARide.Infrastructure.Persistence; 
 using RentARide.Infrastructure.Configurations;
 using RentARide.Infrastructure.Repositories;
 using System.Text;
